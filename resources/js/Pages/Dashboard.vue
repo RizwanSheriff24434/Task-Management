@@ -3,26 +3,33 @@ import { Head, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import { VBtn, VSelect, VTextField, VTextarea, VDialog, VCard, VCardTitle, VCardText, VCardActions, VAlert, VToolbar, VToolbarTitle, VRow, VCol, VSnackbar } from 'vuetify/components';
 
 const filterStatus = ref('All');
 
 const props = defineProps({
-  tasks: Array,
+    tasks: Array,
 });
 
 const filteredTasks = computed(() => {
-  if (filterStatus.value === 'All') {
-    return props.tasks;
-  }
-  return props.tasks.filter(task => task.status === filterStatus.value);
+    if (filterStatus.value === 'All') {
+        return props.tasks;
+    }
+    return props.tasks.filter(task => task.status === filterStatus.value);
 });
 
 
 const successMessage = ref('');
+const snackbar = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('success');
 
 const quote = ref('');
 const author = ref('');
 const showForm = ref(false);
+const dialog = ref(false);
+const deleteDialog = ref(false);
+const taskToDelete = ref(null);
 
 const editingTask = ref(null);
 
@@ -55,79 +62,113 @@ const editTask = async (taskId) => {
         console.log(task);
 
         editingTask.value = task.id;
-        showForm.value = true;
-
         form.title = task.title || '';
         form.description = task.description || '';
         form.status = task.status || 'Pending';
         form.due_date = task.due_date ? task.due_date.substring(0, 10) : '';
+        dialog.value = true;
     } catch (error) {
-        alert('Failed to fetch task data.');
+        snackbarMessage.value = 'Failed to fetch task data.';
+        snackbarColor.value = 'error';
+        snackbar.value = true;
     }
 };
 
-const deleteTask = async (taskId) => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+const askDeleteTask = (taskId) => {
+    taskToDelete.value = taskId;
+    deleteDialog.value = true;
+};
 
+const confirmDeleteTask = async () => {
     try {
-        await axios.delete(`/tasks/${taskId}`);
+        await axios.delete(`/tasks/${taskToDelete.value}`);
+        deleteDialog.value = false;
+        taskToDelete.value = null;
+        snackbarMessage.value = 'Task deleted successfully!';
+        snackbarColor.value = 'success';
+        snackbar.value = true;
         window.location.reload();
     } catch (error) {
-        alert('Failed to delete task.');
+        snackbarMessage.value = 'Failed to delete task.';
+        snackbarColor.value = 'error';
+        snackbar.value = true;
     }
+};
+
+const cancelDelete = () => {
+    deleteDialog.value = false;
+    taskToDelete.value = null;
 };
 
 const updateTask = () => {
     form.put(`/tasks/${editingTask.value}`, {
         preserveScroll: true,
         onSuccess: () => {
-            showForm.value = false;
+            dialog.value = false;
             form.reset();
             editingTask.value = null;
-            successMessage.value = '✅ Task updated successfully!';
-
-            setTimeout(() => {
-                successMessage.value = '';
-            }, 3000);
+            snackbarMessage.value = '✅ Task updated successfully!';
+            snackbarColor.value = 'success';
+            snackbar.value = true;
         },
         onError: () => {
-            alert('Failed to update task');
+            snackbarMessage.value = 'Failed to update task';
+            snackbarColor.value = 'error';
+            snackbar.value = true;
         }
     });
 };
 
 const cancelEdit = () => {
-    showForm.value = false;
+    dialog.value = false;
     editingTask.value = null;
     form.reset();
 };
 
 const saveTask = () => {
-  if (!form.title.trim()) {
-    alert('Task Title is required!');
-    return; // Stop saving if title is empty
-  }
+    if (!form.title.trim()) {
+        snackbarMessage.value = 'Task Title is required!';
+        snackbarColor.value = 'error';
+        snackbar.value = true;
+        return; // Stop saving if title is empty
+    }
 
-  if (editingTask.value) {
-    // Update existing task
-    form.put(`/tasks/${editingTask.value}`, {
-      preserveScroll: true,
-      onSuccess: () => {
-        showForm.value = false;
-        form.reset();
-        editingTask.value = null;
-      },
-    });
-  } else {
-    // Create new task
-    form.post('/tasks', {
-      preserveScroll: true,
-      onSuccess: () => {
-        showForm.value = false;
-        form.reset();
-      },
-    });
-  }
+    if (editingTask.value) {
+        // Update existing task
+        form.put(`/tasks/${editingTask.value}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                dialog.value = false;
+                form.reset();
+                editingTask.value = null;
+                snackbarMessage.value = '✅ Task updated successfully!';
+                snackbarColor.value = 'success';
+                snackbar.value = true;
+            },
+            onError: () => {
+                snackbarMessage.value = 'Failed to update task';
+                snackbarColor.value = 'error';
+                snackbar.value = true;
+            }
+        });
+    } else {
+        // Create new task
+        form.post('/tasks', {
+            preserveScroll: true,
+            onSuccess: () => {
+                dialog.value = false;
+                form.reset();
+                snackbarMessage.value = '✅ Task created successfully!';
+                snackbarColor.value = 'success';
+                snackbar.value = true;
+            },
+            onError: () => {
+                snackbarMessage.value = 'Failed to create task';
+                snackbarColor.value = 'error';
+                snackbar.value = true;
+            }
+        });
+    }
 };
 
 
@@ -140,6 +181,7 @@ const openCreateForm = () => {
         due_date: '',
     });
     showForm.value = true;
+    dialog.value = true;
 };
 
 </script>
@@ -157,94 +199,104 @@ const openCreateForm = () => {
 
         <div class="py-8">
             <div class="mx-auto max-w-6xl sm:px-6 lg:px-8 space-y-6">
-
                 <!-- Motivational Quote Section -->
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded shadow">
-                    <p class="text-lg font-semibold text-gray-800">“{{ quote }}”</p>
-                    <p class="text-sm text-right italic text-gray-600">- {{ author }}</p>
-                </div>
-
-                <div v-if="successMessage"
-                    class="p-3 rounded bg-green-100 text-green-800 border border-green-300 shadow">
-                    {{ successMessage }}
-                </div>
+                <v-alert type="info" border="start" color="blue" elevation="2" class="mb-4">
+                    <div>
+                        <span class="font-weight-bold">“{{ quote }}”</span>
+                        <div class="text-caption text-right">- {{ author }}</div>
+                    </div>
+                </v-alert>
 
                 <!-- Create Task Button and Filter Dropdown -->
-                <div class="flex items-center space-x-2 mb-4">
-                    <button @click="openCreateForm"
-                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                        + Create New Task
-                    </button>
-                    <select v-model="filterStatus" class="border rounded px-2 py-1 text-sm">
-                        <option value="All">All</option>
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                    </select>
-                </div>
+                <v-row align="center" class="mb-4">
+                    <v-col cols="auto">
+                        <v-btn color="success" @click="openCreateForm" prepend-icon="mdi-plus">
+                            Create New Task
+                        </v-btn>
+                    </v-col>
+                    <v-col cols="auto">
+                        <v-select v-model="filterStatus" :items="['All', 'Pending', 'In Progress', 'Completed']"
+                            label="Filter Status" dense outlined hide-details style="min-width: 150px;" />
+                    </v-col>
+                </v-row>
 
-                <!-- Create/Edit Task Form -->
-                <div v-if="showForm" class="bg-white p-4 rounded shadow space-y-4">
-                    <div>
-                        <label>Task Title:</label>
-                        <input v-model="form.title" type="text" class="border rounded w-full px-2 py-1"  required />
-                    </div>
-                    <div>
-                        <label>Description:</label>
-                        <textarea v-model="form.description" class="border rounded w-full px-2 py-1"></textarea>
-                    </div>
-                    <div>
-                        <label>Status:</label>
-                        <select v-model="form.status" class="border rounded w-full px-2 py-1">
-                            <option>Pending</option>
-                            <option>In Progress</option>
-                            <option>Completed</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Due Date:</label>
-                        <input v-model="form.due_date" type="date" class="border rounded w-full px-2 py-1" />
-                    </div>
-                    <div>
-                        <button v-if="!editingTask" @click="saveTask"
-                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                            Save Task
-                        </button>
+                <!-- Create/Edit Task Dialog -->
+                <v-dialog v-model="dialog" max-width="500">
+                    <v-card>
+                        <v-card-title>{{ editingTask ? 'Edit Task' : 'Create New Task' }}</v-card-title>
+                        <v-card-text>
+                            <v-form>
+                                <v-text-field v-model="form.title" label="Task Title" outlined dense required />
+                                <v-textarea v-model="form.description" label="Description" outlined dense />
+                                <v-select v-model="form.status" :items="['Pending', 'In Progress', 'Completed']"
+                                    label="Status" outlined dense />
+                                <v-text-field v-model="form.due_date" label="Due Date" type="date" outlined dense />
+                            </v-form>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-btn v-if="!editingTask" color="primary" variant="flat" class="mx-1" @click="saveTask">
+                                Save Task
+                            </v-btn>
+                            <v-btn v-else color="warning" variant="flat" class="mx-1" @click="updateTask">
+                                Update Task
+                            </v-btn>
+                            <v-btn color="grey" variant="flat" class="mx-1" @click="() => { cancelEdit(); dialog = false; }">
+                                Cancel
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
 
-                        <button v-else @click="updateTask"
-                            class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
-                            Update Task
-                        </button>
-
-                        <button @click="cancelEdit"
-                            class="ml-2 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+                <!-- Delete Confirmation Dialog -->
+                <v-dialog v-model="deleteDialog" max-width="400">
+                    <v-card>
+                        <v-card-title class="text-h6">Confirm Delete</v-card-title>
+                        <v-card-text>Are you sure you want to delete this task?</v-card-text>
+                        <v-card-actions>
+                            <v-btn color="error" variant="flat" class="mx-1" @click="confirmDeleteTask">Delete</v-btn>
+                            <v-btn color="grey" variant="flat" class="mx-1" @click="cancelDelete">Cancel</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
 
                 <!-- Task List -->
                 <div v-if="filteredTasks.length" class="space-y-4">
-                    <div v-for="task in filteredTasks" :key="task.id"
-                        class="bg-white p-4 rounded shadow flex flex-col space-y-1">
-                        <div class="flex items-center justify-between">
-                            <p class="font-semibold">📝 {{ task.title }}</p>
-                            <div class="space-x-2">
-                                <button @click="editTask(task.id)" class="text-blue-600 hover:underline">Edit</button>
-
-                                <button @click="deleteTask(task.id)"
-                                    class="text-red-600 hover:underline">Delete</button>
+                    <v-card v-for="task in filteredTasks" :key="task.id" class="mb-2" elevation="2">
+                        <v-card-text>
+                            <div class="d-flex justify-space-between align-center">
+                                <span class="font-weight-bold">📝 {{ task.title }}</span>
+                                <div class="flex gap-3">
+                                    <v-btn color="primary" variant="flat" class="mx-1" @click="editTask(task.id)">Edit</v-btn>
+                                    <v-btn color="error" variant="flat" class="mx-1" @click="askDeleteTask(task.id)">Delete</v-btn>
+                                </div>
                             </div>
-                        </div>
-                        <p>Due: {{ task.due_date ?? 'N/A' }}</p>
-                        <p>Status: {{ task.status }}</p>
-                    </div>
+                            <div>Due: {{ task.due_date ?? 'N/A' }}</div>
+                            <div>
+                                <v-chip
+                                    :color="
+                                        task.status === 'Completed' ? 'success' :
+                                        task.status === 'In Progress' ? 'warning' :
+                                        task.status === 'Pending' ? 'grey' : 'default'"
+                                    text-color="white"
+                                    class="ma-1"
+                                    label
+                                    variant="flat"
+                                >
+                                    {{ task.status }}
+                                </v-chip>
+                            </div>
+                        </v-card-text>
+                    </v-card>
                 </div>
 
-                <div v-else class="text-gray-500">
+                <v-alert v-else type="info" color="grey" elevation="1">
                     No tasks available.
-                </div>
+                </v-alert>
 
+                <!-- Snackbar for notifications -->
+                <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" location="top middle">
+                    {{ snackbarMessage }}
+                </v-snackbar>
             </div>
         </div>
     </AuthenticatedLayout>
