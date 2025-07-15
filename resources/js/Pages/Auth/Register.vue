@@ -1,10 +1,6 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { VApp, VMain, VContainer, VCard, VCardTitle, VCardText, VTextField, VBtn, VSpacer } from 'vuetify/components';
 
 const form = useForm({
     name: '',
@@ -21,93 +17,74 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Register" />
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="name" value="Name" />
-
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
-
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
+  <Head title="Register" />
+  <VApp>
+    <VMain class="d-flex align-center justify-center" style="min-height: 100vh; background: linear-gradient(135deg, #f3f4f6, #e5e7eb);">
+      <VContainer class="d-flex align-center justify-center" style="height:100vh;">
+        <VCard elevation="10" class="mx-auto pa-8" max-width="400" rounded="xl" color="white darken-4">
+          <VCardTitle class="text-h5 font-weight-bold text-center mb-2">
+            Register
+          </VCardTitle>
+          <VCardText>
+            <form @submit.prevent="submit">
+              <VTextField
+                v-model="form.name"
+                label="Name"
+                type="text"
+                required
+                autofocus
+                autocomplete="name"
+                :error-messages="form.errors.name ? [form.errors.name] : []"
+                class="mb-4"
+              />
+              <VTextField
+                v-model="form.email"
+                label="Email"
+                type="email"
+                required
+                autocomplete="username"
+                :error-messages="form.errors.email ? [form.errors.email] : []"
+                class="mb-4"
+              />
+              <VTextField
+                v-model="form.password"
+                label="Password"
+                type="password"
+                required
+                autocomplete="new-password"
+                :error-messages="form.errors.password ? [form.errors.password] : []"
+                class="mb-4"
+              />
+              <VTextField
+                v-model="form.password_confirmation"
+                label="Confirm Password"
+                type="password"
+                required
+                autocomplete="new-password"
+                :error-messages="form.errors.password_confirmation ? [form.errors.password_confirmation] : []"
+                class="mb-4"
+              />
+              <div class="d-flex align-center justify-end mb-2">
                 <Link
-                    :href="route('login')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  :href="route('login')"
+                  class="text-caption text-decoration-underline me-4"
                 >
-                    Already registered?
+                  Already registered?
                 </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
+                <VBtn
+                  color="red darken-2"
+                  :loading="form.processing"
+                  :disabled="form.processing"
+                  type="submit"
+                  size="large"
                 >
-                    Register
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
+                  Register
+                </VBtn>
+              </div>
+            </form>
+          </VCardText>
+        </VCard>
+      </VContainer>
+    </VMain>
+  </VApp>
 </template>
