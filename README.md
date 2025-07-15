@@ -3,22 +3,21 @@
 A full-stack Task Management web application built using **Laravel (backend)** and **Vue 3 with Inertia.js (frontend)**. 
 This app allows users to create, edit, delete, and manage tasks with status filters and motivational quotes.
 
----
 
 ## Screenshots
 
 ###  Dashboard with Tasks
-[Dashboard Screenshot]
+[Dashboard Screenshot] ![alt text](<Screenshot 2025-07-15 140448.png>)
 
 ###  Task Form
-![Task Form Screenshot]
+![Task Form Screenshot]  ![alt text](<Screenshot 2025-07-15 162944.png>)
 
 ###  Motivational Quote Display
-![Quote Screenshot]
+![Quote Screenshot] ![alt text](<Screenshot 2025-07-15 162959.png>)
 
 ---
 
-## ⚙️ Setup Instructions
+##  Setup Instructions
 
 ### 1. Clone the Repository
 
@@ -41,6 +40,11 @@ php artisan key:generate
 # Set up your database credentials in .env
 # Then run migrations
 php artisan migrate
+
+php artisan db:seed
+(optional)
+DatabaseSeeder email and password
+
 
 
 
