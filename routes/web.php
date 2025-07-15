@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\TaskController;
 use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 
 Route::get('/', function () {
@@ -18,11 +19,9 @@ Route::get('/', function () {
     ]);
 });
 
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
 
-// routes/web.php
+
+//Dashboard route to display tasks
 Route::get('/dashboard', function () {
     $tasks = Task::where('user_id', Auth::id())->latest()->get();
 
@@ -31,18 +30,24 @@ Route::get('/dashboard', function () {
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::post('/tasks', [TaskController::class, 'store'])->middleware('auth');
 
+// Task management routes
+Route::post('/tasks', [TaskController::class, 'store'])->middleware('auth');
 Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 Route::put('/tasks/{task}', [TaskController::class, 'update'])->middleware('auth');
-// In routes/web.php or api.php
 Route::get('/tasks/{id}', [TaskController::class, 'show']);
 
-
+// Profile management routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// API route to fetch a random quote
+Route::get('/api/quote', function () {
+    $response = Http::get('https://zenquotes.io/api/random');
+    return $response->json();
 });
 
 require __DIR__.'/auth.php';

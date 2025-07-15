@@ -9,6 +9,7 @@ use Inertia\Inertia;
 
 class TaskController extends Controller
 {
+    
     public function store(Request $request)
     {
         $user = Auth::user();

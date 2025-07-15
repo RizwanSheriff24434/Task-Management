@@ -40,16 +40,24 @@ const form = useForm({
     due_date: '',
 });
 
+
 const fetchQuote = async () => {
     try {
-        const response = await axios.get('https://api.quotable.io/random');
-        quote.value = response.data.content;
-        author.value = response.data.author;
+        const response = await fetch('/api/quote');
+        const data = await response.json();
+        console.log(data);
+
+        quote.value = data[0].q;
+        author.value = data[0].a;
+
     } catch (error) {
-        quote.value = 'Stay positive. Work hard. Make it happen.';
-        author.value = 'Unknown';
+        console.error("Quote fetch failed:", error);
+        quote.value = "Keep going. You're doing great! 💪";
+        author.value = "Motivator Bot";
     }
 };
+
+
 
 onMounted(() => {
     fetchQuote();
@@ -59,8 +67,6 @@ const editTask = async (taskId) => {
     try {
         const response = await axios.get(`/tasks/${taskId}`);
         const task = response.data;
-        console.log(task);
-
         editingTask.value = task.id;
         form.title = task.title || '';
         form.description = task.description || '';
@@ -202,8 +208,8 @@ const openCreateForm = () => {
                 <!-- Motivational Quote Section -->
                 <v-alert type="info" border="start" color="blue" elevation="2" class="mb-4">
                     <div>
-                        <span class="font-weight-bold">“{{ quote }}”</span>
-                        <div class="text-caption text-right">- {{ author }}</div>
+                        <p class="text-lg font-semibold">"{{ quote }}"</p>
+                        <p class="text-sm text-right mt-2">— {{ author }}</p>
                     </div>
                 </v-alert>
 
@@ -240,7 +246,8 @@ const openCreateForm = () => {
                             <v-btn v-else color="warning" variant="flat" class="mx-1" @click="updateTask">
                                 Update Task
                             </v-btn>
-                            <v-btn color="grey" variant="flat" class="mx-1" @click="() => { cancelEdit(); dialog = false; }">
+                            <v-btn color="grey" variant="flat" class="mx-1"
+                                @click="() => { cancelEdit(); dialog = false; }">
                                 Cancel
                             </v-btn>
                         </v-card-actions>
@@ -266,22 +273,18 @@ const openCreateForm = () => {
                             <div class="d-flex justify-space-between align-center">
                                 <span class="font-weight-bold">📝 {{ task.title }}</span>
                                 <div class="flex gap-3">
-                                    <v-btn color="primary" variant="flat" class="mx-1" @click="editTask(task.id)">Edit</v-btn>
-                                    <v-btn color="error" variant="flat" class="mx-1" @click="askDeleteTask(task.id)">Delete</v-btn>
+                                    <v-btn color="primary" variant="flat" class="mx-1"
+                                        @click="editTask(task.id)">Edit</v-btn>
+                                    <v-btn color="error" variant="flat" class="mx-1"
+                                        @click="askDeleteTask(task.id)">Delete</v-btn>
                                 </div>
                             </div>
                             <div>Due: {{ task.due_date ?? 'N/A' }}</div>
                             <div>
-                                <v-chip
-                                    :color="
-                                        task.status === 'Completed' ? 'success' :
-                                        task.status === 'In Progress' ? 'warning' :
-                                        task.status === 'Pending' ? 'grey' : 'default'"
-                                    text-color="white"
-                                    class="ma-1"
-                                    label
-                                    variant="flat"
-                                >
+                                <v-chip :color="task.status === 'Completed' ? 'success' :
+                                    task.status === 'In Progress' ? 'warning' :
+                                        task.status === 'Pending' ? 'grey' : 'default'" text-color="white" class="ma-1"
+                                    label variant="flat">
                                     {{ task.status }}
                                 </v-chip>
                             </div>
