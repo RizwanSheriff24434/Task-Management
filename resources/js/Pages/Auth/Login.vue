@@ -55,6 +55,13 @@ const submit = () => {
                                 </VBtn>
                             </div>
                         </form>
+                        <div class="d-flex justify-center mt-4">
+                          <Link href="/">
+                            <VBtn color="grey" variant="outlined" size="large">
+                              Back
+                            </VBtn>
+                          </Link>
+                        </div>
                     </VCardText>
                 </VCard>
             </VContainer>
