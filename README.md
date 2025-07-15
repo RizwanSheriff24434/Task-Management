@@ -41,8 +41,8 @@ php artisan key:generate
 # Then run migrations
 php artisan migrate
 
-php artisan db:seed
 (optional)
+php artisan db:seed
 DatabaseSeeder email and password
 
 
