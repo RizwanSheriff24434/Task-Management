@@ -3,6 +3,8 @@
 A full-stack Task Management web application built using **Laravel (backend)** and **Vue 3 with Inertia.js (frontend)**. 
 This app allows users to create, edit, delete, and manage tasks with status filters and motivational quotes.
 
+> DB is already in database folder as sqlite.
+
 
 ## Screenshots
 
